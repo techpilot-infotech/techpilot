@@ -360,19 +360,22 @@ tr.overdue td{border-left:3px solid var(--red)}
     <div class="tp-right">
       <button class="tp-btn" onclick="loadAll()" title="Actualiser">↻</button>
       <div class="tp-user">
-        <div style="text-align:right">
+        <div style="text-align:right" class="user-info">
           <div class="tp-uname" id="tp-name"></div>
           <span class="tp-urole" id="tp-role"></span>
         </div>
         <div class="tp-avatar" id="tp-avatar"></div>
       </div>
-      <button class="tp-btn" onclick="doLogout()">Déconnexion</button>
+      <button class="tp-btn logout-btn" onclick="doLogout()">Déconnexion</button>
+      <button class="tp-hamburger" id="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
 
   <!-- LAYOUT -->
   <div class="layout">
-    <div class="sidebar">
+    <div class="sidebar" id="sidebarEl">
       <div class="nav-group">Principal</div>
       <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
         <span class="nav-icon">🏠</span> Tableau de bord
@@ -670,6 +673,15 @@ function showLoginErr(msg){
   el.style.display='flex';
 }
 
+function toggleSidebar(){
+  const sb=document.getElementById('sidebarEl');
+  const ov=document.getElementById('sidebarOverlay');
+  const hb=document.getElementById('hamburger');
+  if(!sb)return;
+  const open=sb.classList.toggle('open');
+  ov.classList.toggle('open',open);
+  hb.style.opacity=open?'.6':'1';
+}
 function doLogout(){
   USER=null;localStorage.removeItem('tp_user');
   document.getElementById('app').style.display='none';
@@ -727,7 +739,11 @@ function buildServiceNav(){
       <span class="svc-dot" style="background:${SVC_COLORS[s.code]||'#888'}"></span>${s.nom}
     </div>`).join('');
 }
-function filterSvc(code){document.getElementById('fService').value=code;showPage('taches');renderTaches()}
+function filterSvc(code){
+  document.getElementById('fService').value=code;
+  showPage('taches');renderTaches();
+  if(window.innerWidth<=768)toggleSidebar();
+}
 
 function populateSelects(){
   const opts=DATA.services.map(s=>`<option value="${s.code}">${s.code} — ${s.nom}</option>`).join('');
@@ -1174,6 +1190,12 @@ function exportExcel(){genExcel('Export tâches',DATA.taches,DATA.depenses,'Dép
 
 // ── NAVIGATION ────────────────────────────────────────────────
 function showPage(p){
+  if(window.innerWidth<=768){
+    const sb=document.getElementById('sidebarEl');
+    const ov=document.getElementById('sidebarOverlay');
+    if(sb)sb.classList.remove('open');
+    if(ov)ov.classList.remove('open');
+  }
   ['dashboard','taches','depenses','performance','alertes','rapports','equipe'].forEach(x=>{
     const el=document.getElementById('page-'+x);if(el)el.style.display=x===p?'block':'none';
     const nav=document.getElementById('nav-'+x);if(nav)nav.classList.toggle('active',x===p);
